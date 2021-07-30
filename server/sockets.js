@@ -173,6 +173,7 @@ function handleMessage(boardName, message, socket) {
   if (message.tool === "Cursor") {
     message.socket = socket.id;
   } else {
+    message.user = socket.id;
     saveHistory(boardName, message);
   }
 }

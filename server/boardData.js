@@ -43,6 +43,8 @@ class BoardData {
     this.name = name;
     /** @type {{[name: string]: BoardElem}} */
     this.board = {};
+    this.history = [];
+    this.undones = [];
     this.file = path.join(
       config.HISTORY_DIR,
       "board-" + encodeURIComponent(name) + ".json"
@@ -131,6 +133,27 @@ class BoardData {
     this.delaySave();
   }
 
+  undoMsg(message) {
+    //undo message
+}
+  doMsg(message) {
+    //de message
+}
+
+  userUndo(user) {
+    var len = this.history.length;
+    var undoId = len; //id of edit which will be undone. undoId = len means the user has no element in the history
+    for (let i = len-1; i >= 0; i--) {
+      if(this.history[i].id == user) {
+        undoId = i;
+        break;
+      }
+    }
+    console.log("undoId: " + undoId);
+    for (let i = len-1; i >= undoId; i--) { undoMsg(this.history[i]); }
+    for (let i = undoId; i < len; i--) { doMsg(this.history[i]); }
+  }
+
   /** Process a batch of messages
    * @typedef {{
    *  id:string,
@@ -164,6 +187,18 @@ class BoardData {
         break;
       case "child":
         this.addChild(message.parent, message);
+        break;
+      case "history":
+        log("history! message: ")
+	log(message);
+        this.history.push(message);
+        this.undones[message.user] = {};
+        break;
+      case "undo":
+        log("undo! message: ")
+	log(message);
+        this.userUndo(message.user);
+        this.undones.push(message);
         break;
       default:
         //Add data
