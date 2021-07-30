@@ -89,7 +89,7 @@
 
 	function stop(x, y) {
 		//Add a last point to the shape
-		if(curId) {
+		if(curId != "") { //only if actually drawing
 			end = true;
 			move(x, y);
 			curFinal = curInit;
