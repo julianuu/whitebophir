@@ -29,12 +29,14 @@
 	var end = false,
 		curId = "",
 		curUpdate = { //The data of the message that will be sent for every new point
+			'category': 'edit',
 			'type': 'update',
 			'id': "",
 			'x': 0,
 			'y': 0,
 			'x2': 0,
-			'y2': 0
+			'y2': 0,
+			'state': 'editing'
 		},
 		lastTime = performance.now(); //The time at which the last point was drawn
 
@@ -46,6 +48,7 @@
 		curId = Tools.generateUID("r"); //"r" for rectangle
 
 		Tools.drawAndSend({
+			'category': 'edit',
 			'type': 'rect',
 			'id': curId,
 			'color': Tools.getColor(),
@@ -54,7 +57,8 @@
 			'x': x,
 			'y': y,
 			'x2': x,
-			'y2': y
+			'y2': y,
+			'state': 'editing'
 		});
 
 		curUpdate.id = curId;
@@ -87,6 +91,7 @@
 	function stop(x, y) {
 		//Add a last point to the shape
 		end = true;
+		curUpdate.state = 'done';
 		move(x, y);
 		end = false;
 		curId = "";
