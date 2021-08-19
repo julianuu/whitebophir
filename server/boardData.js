@@ -44,13 +44,14 @@ class BoardData {
     /** @type {{[name: string]: BoardElem}} */
     this.board = {};
     this.history = [];
-    this.undones = [];
+    this.userHeads = {};
+    this.userStates = {};
+    this.userCurrentEdit = {};
     this.file = path.join(
       config.HISTORY_DIR,
       "board-" + encodeURIComponent(name) + ".json"
     );
     this.lastSaveDate = Date.now();
-    this.users = new Set();
     this.saveMutex = new Mutex();
   }
 
@@ -133,25 +134,58 @@ class BoardData {
     this.delaySave();
   }
 
-  undoMsg(message) {
-    //undo message
-}
   doMsg(message) {
-    //de message
-}
+    switch (message.type) {
+      case "delete":
+        if (id) this.delete(id);
+        break;
+      case "update":
+        if (id) this.update(id, message);
+        break;
+      case "copy":
+        if (id) this.copy(id, message);
+      default:
+        if (!id) throw new Error("Invalid message: ", message);
+        this.set(id, message);
+    }
+  }
+
+  createUndo(message) { //in general the undos should be created by checking what the messages do, reading the values that would be changed by the message, and creating a message that would lead to those values
+    switch (message.type) {
+      case "delete":
+        //return an update message that creates the deleted message
+        break;
+      case "update":
+        //if update creates then return delete message, otherwise return update message
+      case "copy":
+        //return message that deletes copied object
+      default:
+        if (!id) throw new Error("Invalid message: ", message);
+        this.set(id, message); //still need to check
+    }
+  }
 
   userUndo(user) {
     var len = this.history.length;
+    var head = len;
+    if(this.heads[user] != -1) { head = this.heads[user]; }
     var undoId = len; //id of edit which will be undone. undoId = len means the user has no element in the history
-    for (let i = len-1; i >= 0; i--) {
-      if(this.history[i].id == user) {
+    for (let i = head-1; i >= 0; i--) { //find id or latest message edit made by user
+      console.log("historyid:");
+      console.log(this.history[i].user);;
+      if(this.history[i].user == user && !this.history[i].ignore) {
         undoId = i;
         break;
       }
     }
     console.log("undoId: " + undoId);
-    for (let i = len-1; i >= undoId; i--) { undoMsg(this.history[i]); }
-    for (let i = undoId; i < len; i--) { doMsg(this.history[i]); }
+    console.log("undo:");
+    console.log(this.history[undoId]);
+    console.log("user: ", user);
+    for (let i = len-1; i >= undoId; i--) { this.doMsg(this.history[i].undo); } //undo down to undoId
+    for (let i = undoId; i < len; i++) { this.doMsg(this.history[i].do); } //redo after undoId
+    this.history[undoId].ignore = true;
+    this.heads[user] = undoId;
   }
 
   /** Process a batch of messages
@@ -173,37 +207,36 @@ class BoardData {
    * @param {BoardMessage} message instruction to apply to the board
    */
   processMessage(message) {
+    user = message.user;
     if (message._children) return this.processMessageBatch(message._children);
     let id = message.id;
-    switch (message.type) {
-      case "delete":
-        if (id) this.delete(id);
-        break;
-      case "update":
-        if (id) this.update(id, message);
-        break;
-      case "copy":
-        if (id) this.copy(id, message);
+    switch (message.category) {
+      case "edit":
+        if (!(user in this.userStates) || this.userStates[user] == "done") {
+          this.userCurrentEdit.undo = createUndo(message);
+        }
+        this.doMsg(message);
+        if (message.state == "done") {
+          this.userCurrentEdit.do = message;
+          this.history.push(this.userCurrentEdit);
+        }
+        this.userStates[user] = message.state;
         break;
       case "child":
         this.addChild(message.parent, message);
         break;
-      case "history":
-        log("history! message: ")
-	log(message);
-        this.history.push(message);
-        this.undones[message.user] = {};
-        break;
       case "undo":
         log("undo! message: ")
 	log(message);
-        this.userUndo(message.user);
-        this.undones.push(message);
+        this.userUndo(user);
+        break;
+      case "redo":
+        log("redo! message: ")
+	log(message);
+        this.userRedo(user);
         break;
       default:
-        //Add data
         if (!id) throw new Error("Invalid message: ", message);
-        this.set(id, message);
     }
   }
 
