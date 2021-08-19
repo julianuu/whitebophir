@@ -25,7 +25,6 @@
  */
 
 (function () { //Code isolation
-    var curInit = {};
     var curUpdate = { //The data of the message that will be sent for every new point
         'type': 'update',
         'id': "",
@@ -44,7 +43,7 @@
 
         curUpdate.id = Tools.generateUID("e"); //"e" for ellipse
 
-        curInit = {
+        Tools.drawAndSend({
             'type': 'ellipse',
             'id': curUpdate.id,
             'color': Tools.getColor(),
@@ -54,8 +53,7 @@
             'y': y,
             'x2': x,
             'y2': y
-        };
-        Tools.drawAndSend(curInit);
+        });
 
         curUpdate.id = curUpdate.id;
         curUpdate.x = x;
@@ -95,16 +93,9 @@
     }
 
     function stop(x, y) {
-        if (!curUpdate.id) return; // Not currently drawing
         lastPos.x = x;
         lastPos.y = y;
         doUpdate(true);
-        curFinal = curInit;
-        curFinal['x'] = curUpdate['x'];
-        curFinal['y'] = curUpdate['y'];
-        curFinal['x2'] = curUpdate['x2'];
-        curFinal['y2'] = curUpdate['y2'];
-        Tools.send({'type':'history', edit:curFinal});
         curUpdate.id = "";
     }
 

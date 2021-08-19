@@ -28,8 +28,6 @@
 	//Indicates the id of the shape the user is currently drawing or an empty string while the user is not drawing
 	var end = false,
 		curId = "",
-		curInit = {}; //The rectangle how it is after key press
-		curFinal = {}; //The rectangle how it is after key release
 		curUpdate = { //The data of the message that will be sent for every new point
 			'type': 'update',
 			'id': "",
@@ -46,7 +44,8 @@
 		evt.preventDefault();
 
 		curId = Tools.generateUID("r"); //"r" for rectangle
-		curInit = {
+
+		Tools.drawAndSend({
 			'type': 'rect',
 			'id': curId,
 			'color': Tools.getColor(),
@@ -56,9 +55,7 @@
 			'y': y,
 			'x2': x,
 			'y2': y
-		}
-
-		Tools.drawAndSend(curInit);
+		});
 
 		curUpdate.id = curId;
 		curUpdate.x = x;
@@ -89,18 +86,10 @@
 
 	function stop(x, y) {
 		//Add a last point to the shape
-		if(curId != "") { //only if actually drawing
-			end = true;
-			move(x, y);
-			curFinal = curInit;
-			curFinal['x'] = curUpdate['x'];
-			curFinal['y'] = curUpdate['y'];
-			curFinal['x2'] = curUpdate['x2'];
-			curFinal['y2'] = curUpdate['y2'];
-			Tools.send({'type':'history', edit:curFinal});
-			end = false;
-			curId = "";
-		}
+		end = true;
+		move(x, y);
+		end = false;
+		curId = "";
 	}
 
 	function draw(data) {

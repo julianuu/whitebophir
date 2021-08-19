@@ -56,7 +56,6 @@
 		if (erasing && target !== Tools.svg && target !== Tools.drawingArea && inDrawingArea(target)) {
 			msg.id = target.id;
 			Tools.drawAndSend(msg);
-			Tools.send({"type":"history", edit:msg});
 		}
 	}
 
