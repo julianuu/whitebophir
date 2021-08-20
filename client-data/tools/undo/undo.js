@@ -27,7 +27,7 @@
 (function () { //Code isolation
 
 	function undo() {
-		Tools.send({"type":"undo"})
+		Tools.send({"category":"undo"})
 	}
 
 	Tools.add({ //The new tool

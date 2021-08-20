@@ -29,8 +29,8 @@
 	var end = false,
 		curId = "",
 		curUpdate = { //The data of the message that will be sent for every new point
-			'category': 'edit',
-			'type': 'update',
+			'category': 'update',
+			'type': 'rect',
 			'id': "",
 			'x': 0,
 			'y': 0,
@@ -48,7 +48,7 @@
 		curId = Tools.generateUID("r"); //"r" for rectangle
 
 		Tools.drawAndSend({
-			'category': 'edit',
+			'category': 'add',
 			'type': 'rect',
 			'id': curId,
 			'color': Tools.getColor(),

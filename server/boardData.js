@@ -134,8 +134,8 @@ class BoardData {
     this.delaySave();
   }
 
-  doMsg(message) {
-    switch (message.type) {
+  doMsg(message,id) {
+    switch (message.category) {
       case "delete":
         if (id) this.delete(id);
         break;
@@ -144,13 +144,14 @@ class BoardData {
         break;
       case "copy":
         if (id) this.copy(id, message);
+      case "add":
+        this.set(id, message);
       default:
         if (!id) throw new Error("Invalid message: ", message);
-        this.set(id, message);
     }
   }
 
-  createUndo(message) { //in general the undos should be created by checking what the messages do, reading the values that would be changed by the message, and creating a message that would lead to those values
+  createUndo(message) { //in general the undos should be created by checking what the message does, reading the values that would be changed by the message, and creating a message that would lead to those values
     switch (message.type) {
       case "delete":
         //return an update message that creates the deleted message
@@ -159,9 +160,10 @@ class BoardData {
         //if update creates then return delete message, otherwise return update message
       case "copy":
         //return message that deletes copied object
+      case "add":
+        //return message that deletes added object
       default:
         if (!id) throw new Error("Invalid message: ", message);
-        this.set(id, message); //still need to check
     }
   }
 
@@ -211,11 +213,14 @@ class BoardData {
     if (message._children) return this.processMessageBatch(message._children);
     let id = message.id;
     switch (message.category) {
-      case "edit":
+      case "add":
+      case "delete":
+      case "update":
+      case "copy":
         if (!(user in this.userStates) || this.userStates[user] == "done") {
           this.userCurrentEdit.undo = createUndo(message);
         }
-        this.doMsg(message);
+        this.doMsg(message,id);
         if (message.state == "done") {
           this.userCurrentEdit.do = message;
           this.history.push(this.userCurrentEdit);
